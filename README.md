@@ -1,4 +1,4 @@
-# Food Nature
+# Nature Food
 Project LiaoRl21 was used as an example for data processing.
 
 ## 1. Workflow for ASV data processing

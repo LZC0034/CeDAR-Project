@@ -1,4 +1,4 @@
-# CeDAR_2020-2021
+# Food Nature
 Project LiaoRl21 was used as an example for data processing.
 
 ## 1. Workflow for ASV data processing

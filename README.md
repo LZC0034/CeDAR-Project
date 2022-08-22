@@ -1,4 +1,4 @@
-### The LiaoRl21 dataset was used as an example for data processing.
+### The LiaoRl21 dataset (NCBI: PRJNA792031) was used as an example for data processing.
 
 ### 1. Workflow for ASV data processing
 ##### Step 1. Importing data
@@ -15,3 +15,4 @@
 ##### Step 3. Generating k-mer hash tables
 ##### Step 4. Constructing classifiers 
 
+Reference

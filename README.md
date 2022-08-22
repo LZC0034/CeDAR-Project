@@ -14,5 +14,3 @@
 ##### Step 2. Removing primers
 ##### Step 3. Generating k-mer hash tables
 ##### Step 4. Constructing classifiers 
-
-Reference

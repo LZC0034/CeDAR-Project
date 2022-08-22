@@ -1,4 +1,4 @@
-### Project LiaoRl21 was used as an example for data processing.
+### The LiaoRl21 dataset was used as an example for data processing.
 
 ### 1. Workflow for ASV data processing
 ##### Step 1. Importing data

@@ -5,15 +5,15 @@ qiime tools import --type SampleData[PairedEndSequencesWithQuality] --input-path
 Step 2. Removing primers
 source activate /share/apps/bio3user/miniconda3/envs/qiime2-2021.8
 qiime cutadapt trim-paired --i-demultiplexed-sequences step1_importing_data/LiaoRl21_demux-paired-end.qza --p-front-f CCTACGGGNGGCWGCAG --p-front-r GACTACHVGGGTATCTAATCC --p-cores 2 --o-trimmed-sequences step2_removing_primers/LiaoRl21_trimmed-seqs.qza --p-error-rate 0 –verbose
-qiime demux summarize --i-data step2_ removing_primers /LiaoRl21_trimmed-seqs.qza --o-visualization step2_ removing_primers /LiaoRl21_trimmed-seqs.qzv
+qiime demux summarize --i-data step2_ removing_primers/LiaoRl21_trimmed-seqs.qza --o-visualization step2_ removing_primers/LiaoRl21_trimmed-seqs.qzv
 
 Step 3. Denoising and generating ASV tables
 source activate /share/apps/bio3user/miniconda3/envs/qiime2-2021.8
-qiime dada2 denoise-paired --i-demultiplexed-seqs step2_ removing_primers /LiaoRl21_trimmed-seqs.qza --p-trim-left-f 0 --p-trim-left-r 0  --p-trunc-len-f 280 --p-trunc-len-r 200 --o-table step3_denoising /LiaoRl21_table.qza --o-representative-sequences step3_denoising /LiaoRl21_rep-seqs.qza --o-denoising-stats step3_denoising/LiaoRl21_denoising-stats.qza
-qiime tools export --input-path step3_denoising /LiaoRl21_table.qza --output-path step3_denoising /LiaoRl21_exported-feature-table   ##Export table.qza to feature-table.biom##
+qiime dada2 denoise-paired --i-demultiplexed-seqs step2_ removing_primers/LiaoRl21_trimmed-seqs.qza --p-trim-left-f 0 --p-trim-left-r 0  --p-trunc-len-f 280 --p-trunc-len-r 200 --o-table step3_denoising/LiaoRl21_table.qza --o-representative-sequences step3_denoising/LiaoRl21_rep-seqs.qza --o-denoising-stats step3_denoising/LiaoRl21_denoising-stats.qza
+qiime tools export --input-path step3_denoising/LiaoRl21_table.qza --output-path step3_denoising/LiaoRl21_exported-feature-table   ##Export table.qza to feature-table.biom##
 
 ##Exporting table.qza to feature-table.biom##
-qiime tools export --input-path step3_denoising /LiaoRl21_table.qza --output-path step3_denoising /LiaoRl21_exported-feature-table   
+qiime tools export --input-path step3_denoising/LiaoRl21_table.qza --output-path step3_denoising/LiaoRl21_exported-feature-table   
 
 ##Converting biom to csv##
-biom convert -i step3_denoising /LiaoRl21_exported-feature-table/ feature-table.biom -o step3_denoising /LiaoRl21_exported-feature-table/LiaoRl21_ASV.csv --to-tsv
+biom convert -i step3_denoising/LiaoRl21_exported-feature-table/feature-table.biom -o step3_denoising/LiaoRl21_exported-feature-table/LiaoRl21_ASV.csv --to-tsv

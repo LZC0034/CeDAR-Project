@@ -1,1 +1,65 @@
+Step 1. Importing data
+It is the same with step 1 in ASV data processing.
+
+Step 2. Removing primers
+It is the same with step 2 in ASV data processing.
+
+Step 3. Generating k-mer hash tables
+##Exporting the trimmed-seqs.qza files to multiple *.fastq.gz files##
+source activate /share/apps/bio3user/miniconda3/envs/qiime2-2021.8
+qiime tools export --input-path step2_removing_primers /LiaoRl21_trimmed-seqs.qza --output-path step2_removing_primers /LiaoRl21_trimmed-seqs
+
+##Merge paired-end reads into single-end reads##
+module load qiime/1.9.1
+multiple_join_paired_ends.py -i step2_removing_primers /LiaoRl21_trimmed-seqs -o step2_removing_primers /LiaoRl21_trimmed-seqs_merged
+
+##Generating 7-mer hash data##
+source activate sourmash_env
+sourmash sketch dna -p k=7,scaled=1,abund step2_removing_primers /LiaoRl21_trimmed-seqs_merged/*.fastq.gz --name-from-first -f --outdir step2_removing_primers /LiaoRl21_7_mer_sigs
+
+##Converting sig files to csv files## python
+from sourmash import signature
+import pandas as pd
+import os
+import sys
+import argparse
+
+folderPath = r"/home/liaochao/data/CeDAR/LiaoRl21/step2_removing_primers /LiaoRl21_7_mer_sigs "
+os.chdir(folderPath)
+if not os.path.exists("/home/liaochao/data/CeDAR/LiaoRl21/step2_removing_primers/LiaoRl21_7_mer_hash_csv"):
+os.mkdir("/home/liaochao/data/CeDAR/LiaoRl21/step2_removing_primers/LiaoRl21_7_mer_hash_csv")
+
+for item in os.listdir(folderPath):
+    if item.endswith('.sig'):
+        sigpath=r"./"+item
+        newname = r"/home/liaochao/data/CeDAR/LiaoRl21/step2_removing_primers/LiaoRl21_7_mer_hash_csv/"+item.replace('.sig', '.csv')
+
+        sigfp = open(sigpath, 'rt')
+        siglist = list(signature.load_signatures(sigfp))
+        loaded_sig = siglist[0]
+        
+        # # Get the minhashes
+        mins = loaded_sig.minhash.get_mins(with_abundance=True)
+
+        name = os.path.basename(sigpath)
+        df = pd.DataFrame.from_dict(mins, orient='index', columns=[name])
+
+        # write to a csv
+        df.to_csv(newname, index_label="minhash")
+
+#####Merging separated csv files into one csv files######## R programming
+setwd("D:/Research/CeDAR/LiaoRl21/LiaoRl21_7_mer_hash_csv")
+
+library(plyr)
+library(readr)
+library(dplyr)
+
+multmerge = function(mypath){
+filenames=list.files(path=mypath, full.names=TRUE)
+datalist = lapply(filenames, function(x){read.csv(file=x,header=T)})
+Reduce(function(x,y) {merge(x,y,all=TRUE)}, datalist)
+}
+
+LiaoRl21_7_mer_hash = multmerge("D:/Research/CeDAR/LiaoRl21/LiaoRl21_7_mer_hash_csv")
+write.csv(LiaoRl21_7_mer_hash,"LiaoRl21_7_mer_hash.csv",na="0")
 

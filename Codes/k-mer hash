@@ -17,7 +17,7 @@ multiple_join_paired_ends.py -i step2_removing_primers/LiaoRl21_trimmed-seqs -o 
 source activate sourmash_env
 sourmash sketch dna -p k=7,scaled=1,abund step2_removing_primers/LiaoRl21_trimmed-seqs_merged/*.fastq.gz --name-from-first -f --outdir step2_removing_primers/LiaoRl21_7_mer_sigs
 
-##Converting sig files to csv files## python##
+##Converting sig files to csv files## python code##
 from sourmash import signature
 import pandas as pd
 import os
@@ -47,7 +47,7 @@ for item in os.listdir(folderPath):
         # write to a csv
         df.to_csv(newname, index_label="minhash")
 
-##Merging separated csv files into one csv files## R programming##
+##Merging separated csv files into one csv files## R code##
 setwd("D:/Research/CeDAR/LiaoRl21/LiaoRl21_7_mer_hash_csv")
 
 library(plyr)

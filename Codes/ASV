@@ -1,1 +1,4 @@
+Step 1. Importing data
+source activate /share/apps/bio3user/miniconda3/envs/qiime2-2021.8
+qiime tools import --type SampleData[PairedEndSequencesWithQuality] --input-path LiaoRL21_raw_data --input-format CasavaOneEightSingleLanePerSampleDirFmt --output-path step1_importing_data/LiaoRl21_demux-paired-end.qza
 

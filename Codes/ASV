@@ -48,3 +48,21 @@ LiaoRl21_ASV_matrix<-LiaoRl21_ASV_tnew[,5:2514]
 LiaoRl21_ASV_css<-scaling_ratio*LiaoRl21_ASV_matrix
 LiaoRl21_ASV_css_full<-cbind(LiaoRl21_ASV_tnew[,1:4],Liaorl21_ASV_css)
 write.csv(LiaoRl21_ASV_css_full,"LiaoRl21_ASV_css_full.csv")
+
+##Conducting confounding effect removal (cer) using ComBat function in ‘sva’ R package##
+LiaoRl21_ASV_css_full<-read.csv("LiaoRl21_ASV_css_full.csv")
+LiaoRl21_ASV_css_full<-LiaoRl21_ASV_css_full[,-1]
+library(sva) 
+Brand<-as.factor(LiaoRl21_ASV_css_full$Brand)
+Days<-as.factor(LiaoRl21_ASV_css_full$Days)
+Season<-as.factor(LiaoRl21_ASV_css_full$Season)
+Group<-as.factor(LiaoRl21_ASV_css_full$Group)
+
+LiaoRl21_ASV_css_t<-t(LiaoRl21_ASV_css_full[,5:2514])
+LiaoRl21_ASV_css_br = ComBat(dat=LiaoRl21_ASV_css_t, batch=Brand, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #br means brand effect removal#
+LiaoRl21_ASV_css_bdr = ComBat(dat=LiaoRl21_ASV_css_br, batch=Days, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdr means brand and day effect removal#
+LiaoRl21_ASV_css_bdsr = ComBat(dat=LiaoRl21_ASV_css_bdr, batch=Season, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdr means brand and day effect removal#
+LiaoRl21_ASV_css_bdsrt<-t(LiaoRl21_ASV_css_bdsr)
+LiaoRl21_ASV_css_bdsrt_full<-cbind(LiaoRl21_ASV_css_full[,1:5],LiaoRl21_ASV_css_bdsrt)
+write.csv(LiaoRl21_ASV_css_bdsrt_full,"LiaoRl21_ASV_css_bdsrt_full.csv")
+

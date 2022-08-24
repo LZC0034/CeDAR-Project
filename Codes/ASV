@@ -66,3 +66,57 @@ LiaoRl21_ASV_css_bdsrt<-t(LiaoRl21_ASV_css_bdsr)
 LiaoRl21_ASV_css_bdsrt_full<-cbind(LiaoRl21_ASV_css_full[,1:5],LiaoRl21_ASV_css_bdsrt)
 write.csv(LiaoRl21_ASV_css_bdsrt_full,"LiaoRl21_ASV_css_bdsrt_full.csv")
 
+##Building random forests (RF)-based model with Out-of-bag (OOB) validation method##
+library(randomForest)
+LiaoRl1_ASV_css_bdsrt_full<-read.csv("LiaoRl21_ASV_css_bdsrt_full.csv")
+LiaoRl21_ASV_css_bdsrt_full<-LiaoRl21_ASV_css_bdsrt_full[,-1]
+Brand<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Brand)
+Days<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Days)
+Season<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Season)
+Group<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Group)
+LiaoRl21_ASV_g_rf <- randomForest(Group~.,data=LiaoRl21_ASV_css_bdsrt_full[,5:2514],importance=TRUE, proximity=TRUE) #OOB validation method is embodied in this R package##Five replicates were conducted#
+LiaoRl21_ASV_g_rf #g represents group#
+
+##Building RF-based model with 10-fold cross-validation method##
+library(caret)
+library(randomForest)
+Group<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Group)
+trControl <- trainControl(method  = "cv",
+                          number = 10)
+x<- LiaoRl1_ASV_css_bdsrt_full[,5:2514]
+mtry <- sqrt(ncol(x))
+LiaoRl21_ASV_g_rf_cv <- train(Group ~ .,
+             method     = "rf",
+             tuneGrid   = expand.grid(.mtry=mtry),
+             trControl  = trControl,
+             metric     = "Accuracy",
+             MaxNWts=300000,
+             data       = LiaoRl1_ASV_css_bdsrt_full[,5:2514])
+LiaoRl21_ASV_g_rf_cv
+
+##Building k-nearest neighbors (k-NN)-based model with 10-fold cross-validation method##
+library(caret)
+library(e1071)
+trControl <- trainControl(method  = "cv",
+                          number  = 10)
+LiaoRl21_ASV_g_knn_cv <- train(Group ~ .,
+             method     = "knn",
+             tuneGrid   = expand.grid(k = 1:10),
+             trControl  = trControl,
+             metric     = "Accuracy",
+             data       = LiaoRl1_ASV_css_bdsrt_full[,5:2514])
+LiaoRl21_ASV_g_knn_cv
+
+##Building neural network (NN)-based model with 10-fold cross-validation method##
+library(caret)
+library(nnet)
+trControl <- trainControl(method  = "cv",
+                          number  = 10)
+LiaoRl21_ASV_g_nnet_cv <- train(Group ~ .,
+             method     = "nnet",
+             tuneGrid   = expand.grid(size=5,decay=0.1),
+             trControl  = trControl,
+             metric     = "Accuracy",
+             MaxNWts=300000,
+             data       = LiaoRl1_ASV_css_bdsrt_full[,5:2514])
+LiaoRl21_ASV_g_nnet_cv

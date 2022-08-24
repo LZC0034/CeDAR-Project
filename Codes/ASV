@@ -2,10 +2,12 @@ Step 1. Importing data
 source activate /share/apps/bio3user/miniconda3/envs/qiime2-2021.8
 qiime tools import --type SampleData[PairedEndSequencesWithQuality] --input-path LiaoRL21_raw_data --input-format CasavaOneEightSingleLanePerSampleDirFmt --output-path step1_importing_data/LiaoRl21_demux-paired-end.qza
 
+
 Step 2. Removing primers
 source activate /share/apps/bio3user/miniconda3/envs/qiime2-2021.8
 qiime cutadapt trim-paired --i-demultiplexed-sequences step1_importing_data/LiaoRl21_demux-paired-end.qza --p-front-f CCTACGGGNGGCWGCAG --p-front-r GACTACHVGGGTATCTAATCC --p-cores 2 --o-trimmed-sequences step2_removing_primers/LiaoRl21_trimmed-seqs.qza --p-error-rate 0 –verbose
 qiime demux summarize --i-data step2_ removing_primers/LiaoRl21_trimmed-seqs.qza --o-visualization step2_ removing_primers/LiaoRl21_trimmed-seqs.qzv
+
 
 Step 3. Denoising and generating ASV tables
 source activate /share/apps/bio3user/miniconda3/envs/qiime2-2021.8
@@ -17,3 +19,35 @@ qiime tools export --input-path step3_denoising/LiaoRl21_table.qza --output-path
 
 ##Converting biom to csv##
 biom convert -i step3_denoising/LiaoRl21_exported-feature-table/feature-table.biom -o step3_denoising/LiaoRl21_exported-feature-table/LiaoRl21_ASV.csv --to-tsv
+
+
+Step 4. Constructing classifiers
+##Construting machine learning-based classifiers##
+setwd("D:/Research/CeDAR/LiaoRl21/LiaoRl21_ASV")
+LiaoRl21_ASV<-read.csv("LiaoRl21_ASV.csv")
+LiaoRl21_ASV<-LiaoRl21_ASV[,-1]
+
+LiaoRl21_ASV_t<-t(LiaoRl21_ASV)
+LiaoRl21_ASV_t<-as.matrix(LiaoRl21_ASV_t)
+LiaoRl21_ASV_t<-as.data.frame(LiaoRl21_ASV_t)
+names(LiaoRl21_ASV_t)<-LiaoRl21_ASV_t[1,]
+LiaoRl21_ASV_t<-LiaoRl21_ASV_t[-1,]
+write.csv(LiaoRl21_ASV_t,"LiaoRl21_ASV_t.csv")
+LiaoRl21_ASV_t<-read.csv("LiaoRl21_ASV_t.csv")
+
+library(dplyr)
+LiaoRl21_safety_metadata<-read.csv("LiaoRl21_safety_metadata.csv")
+LiaoRl21_ASV_factors<- LiaoRl21_safety_metadata[,c(2,3,5)]
+LiaoRl21_ASV_tnew<-cbind(LiaoRl21_ASV_factors,LiaoRl21_ASV_t[,2:2511])
+LiaoRl21_ASV_tnew2<-cbind(LiaoRl21_safety_metadata[1],LiaoRl21_ASV_tnew)
+write.csv(LiaoRl21_ASV_tnew2,"LiaoRl21_ASV_tnew.csv",na="0")
+LiaoRl21_ASV_tnew<-read.csv("LiaoRl21_ASV_tnew.csv")
+LiaoRl21_ASV_tnew<-LiaoRl21_ASV_tnew[,-1]
+
+##Normalizing data using common sum scaling (CSS) method##
+sumrow<-rowSums(LiaoRl21_ASV_tnew[,5:2514])
+scaling_ratio <- min(sumrow)/sumrow
+LiaoRl21_ASV_matrix<-LiaoRl21_ASV_tnew[,5:2514]
+LiaoRl21_ASV_css<-scaling_ratio*LiaoRl21_ASV_matrix
+LiaoRl21_ASV_css_full<-cbind(LiaoRl21_ASV_tnew[,1:4],Liaorl21_ASV_css)
+write.csv(LiaoRl21_ASV_css_full,"LiaoRl21_ASV_css_full.csv")

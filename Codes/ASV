@@ -2,12 +2,10 @@ Step 1. Importing data
 source activate /share/apps/bio3user/miniconda3/envs/qiime2-2021.8
 qiime tools import --type SampleData[PairedEndSequencesWithQuality] --input-path LiaoRL21_raw_data --input-format CasavaOneEightSingleLanePerSampleDirFmt --output-path step1_importing_data/LiaoRl21_demux-paired-end.qza
 
-
 Step 2. Removing primers
 source activate /share/apps/bio3user/miniconda3/envs/qiime2-2021.8
 qiime cutadapt trim-paired --i-demultiplexed-sequences step1_importing_data/LiaoRl21_demux-paired-end.qza --p-front-f CCTACGGGNGGCWGCAG --p-front-r GACTACHVGGGTATCTAATCC --p-cores 2 --o-trimmed-sequences step2_removing_primers/LiaoRl21_trimmed-seqs.qza --p-error-rate 0 –verbose
 qiime demux summarize --i-data step2_ removing_primers/LiaoRl21_trimmed-seqs.qza --o-visualization step2_ removing_primers/LiaoRl21_trimmed-seqs.qzv
-
 
 Step 3. Denoising and generating ASV tables
 source activate /share/apps/bio3user/miniconda3/envs/qiime2-2021.8
@@ -19,7 +17,6 @@ qiime tools export --input-path step3_denoising/LiaoRl21_table.qza --output-path
 
 ##Converting biom to csv##
 biom convert -i step3_denoising/LiaoRl21_exported-feature-table/feature-table.biom -o step3_denoising/LiaoRl21_exported-feature-table/LiaoRl21_ASV.csv --to-tsv
-
 
 Step 4. Constructing classifiers
 ##Construting machine learning-based classifiers##

@@ -36,7 +36,7 @@ LiaoRl21_ASV_t<-read.csv("LiaoRl21_ASV_t.csv")
 
 library(dplyr)
 LiaoRl21_safety_metadata<-read.csv("LiaoRl21_safety_metadata.csv")
-LiaoRl21_ASV_factors<- LiaoRl21_safety_metadata[,c(2,3,5)]
+LiaoRl21_ASV_factors<- LiaoRl21_safety_metadata[,c(4,5,6,7,8)]
 LiaoRl21_ASV_tnew<-cbind(LiaoRl21_ASV_factors,LiaoRl21_ASV_t[,2:2511])
 LiaoRl21_ASV_tnew2<-cbind(LiaoRl21_safety_metadata[1],LiaoRl21_ASV_tnew)
 write.csv(LiaoRl21_ASV_tnew2,"LiaoRl21_ASV_tnew.csv",na="0")
@@ -44,11 +44,11 @@ LiaoRl21_ASV_tnew<-read.csv("LiaoRl21_ASV_tnew.csv")
 LiaoRl21_ASV_tnew<-LiaoRl21_ASV_tnew[,-1]
 
 ##Normalizing data using common sum scaling (CSS) method##
-sumrow<-rowSums(LiaoRl21_ASV_tnew[,5:2514])
+sumrow<-rowSums(LiaoRl21_ASV_tnew[,7:2516])
 scaling_ratio <- min(sumrow)/sumrow
-LiaoRl21_ASV_matrix<-LiaoRl21_ASV_tnew[,5:2514]
+LiaoRl21_ASV_matrix<-LiaoRl21_ASV_tnew[,7:2516]
 LiaoRl21_ASV_css<-scaling_ratio*LiaoRl21_ASV_matrix
-LiaoRl21_ASV_css_full<-cbind(LiaoRl21_ASV_tnew[,1:4],Liaorl21_ASV_css)
+LiaoRl21_ASV_css_full<-cbind(LiaoRl21_ASV_tnew[,1:6],Liaorl21_ASV_css)
 write.csv(LiaoRl21_ASV_css_full,"LiaoRl21_ASV_css_full.csv")
 
 ##Conducting confounding effect removal (cer) using ComBat function in ‘sva’ R package##
@@ -60,12 +60,12 @@ Days<-as.factor(LiaoRl21_ASV_css_full$Days)
 Season<-as.factor(LiaoRl21_ASV_css_full$Season)
 Group<-as.factor(LiaoRl21_ASV_css_full$Group)
 
-LiaoRl21_ASV_css_t<-t(LiaoRl21_ASV_css_full[,5:2514])
+LiaoRl21_ASV_css_t<-t(LiaoRl21_ASV_css_full[,7:2516])
 LiaoRl21_ASV_css_br = ComBat(dat=LiaoRl21_ASV_css_t, batch=Brand, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #br means brand effect removal#
-LiaoRl21_ASV_css_bdr = ComBat(dat=LiaoRl21_ASV_css_br, batch=Days, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdr means brand and day effects removal#
-LiaoRl21_ASV_css_bdsr = ComBat(dat=LiaoRl21_ASV_css_bdr, batch=Season, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdsr means brand, day and season effects removal#
+LiaoRl21_ASV_css_bdr = ComBat(dat=LiaoRl21_ASV_css_br, batch=Days, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdr means brand and day effect removal#
+LiaoRl21_ASV_css_bdsr = ComBat(dat=LiaoRl21_ASV_css_bdr, batch=Season, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdr means brand and day effect removal#
 LiaoRl21_ASV_css_bdsrt<-t(LiaoRl21_ASV_css_bdsr)
-LiaoRl21_ASV_css_bdsrt_full<-cbind(LiaoRl21_ASV_css_full[,1:5],LiaoRl21_ASV_css_bdsrt)
+LiaoRl21_ASV_css_bdsrt_full<-cbind(LiaoRl21_ASV_css_full[,1:6],LiaoRl21_ASV_css_bdsrt)
 write.csv(LiaoRl21_ASV_css_bdsrt_full,"LiaoRl21_ASV_css_bdsrt_full.csv")
 
 ##Building random forests (RF)-based model with Out-of-bag (OOB) validation method##
@@ -76,7 +76,9 @@ Brand<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Brand)
 Days<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Days)
 Season<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Season)
 Group<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Group)
-LiaoRl21_ASV_g_rf <- randomForest(Group~.,data=LiaoRl21_ASV_css_bdsrt_full[,5:2514],importance=TRUE, proximity=TRUE) #OOB validation method is embodied in this R package##Five replicates were conducted#
+Pathogen<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Pathogen)
+
+LiaoRl21_ASV_g_rf <- randomForest(Group~.,data=LiaoRl21_ASV_css_bdsrt_full[,7:2516],importance=TRUE, proximity=TRUE) #OOB validation method is embodied in this R package##Five replicates were conducted#
 LiaoRl21_ASV_g_rf #g represents group#
 
 ##Building RF-based model with 10-fold cross-validation method##
@@ -85,7 +87,7 @@ library(randomForest)
 Group<-as.factor(LiaoRl21_ASV_css_bdsrt_full$Group)
 trControl <- trainControl(method  = "cv",
                           number = 10)
-x<- LiaoRl1_ASV_css_bdsrt_full[,5:2514]
+x<- LiaoRl1_ASV_css_bdsrt_full[,7:2516]
 mtry <- sqrt(ncol(x))
 LiaoRl21_ASV_g_rf_cv <- train(Group ~ .,
              method     = "rf",
@@ -93,7 +95,7 @@ LiaoRl21_ASV_g_rf_cv <- train(Group ~ .,
              trControl  = trControl,
              metric     = "Accuracy",
              MaxNWts=300000,
-             data       = LiaoRl1_ASV_css_bdsrt_full[,5:2514])
+             data       = LiaoRl1_ASV_css_bdsrt_full[,7:2516])
 LiaoRl21_ASV_g_rf_cv
 
 ##Building k-nearest neighbors (k-NN)-based model with 10-fold cross-validation method##
@@ -106,7 +108,7 @@ LiaoRl21_ASV_g_knn_cv <- train(Group ~ .,
              tuneGrid   = expand.grid(k = 1:10),
              trControl  = trControl,
              metric     = "Accuracy",
-             data       = LiaoRl1_ASV_css_bdsrt_full[,5:2514])
+             data       = LiaoRl1_ASV_css_bdsrt_full[,7:2516])
 LiaoRl21_ASV_g_knn_cv
 
 ##Building neural network (NN)-based model with 10-fold cross-validation method##
@@ -120,5 +122,6 @@ LiaoRl21_ASV_g_nnet_cv <- train(Group ~ .,
              trControl  = trControl,
              metric     = "Accuracy",
              MaxNWts=300000,
-             data       = LiaoRl1_ASV_css_bdsrt_full[,5:2514])
+             data       = LiaoRl1_ASV_css_bdsrt_full[,7:2516])
 LiaoRl21_ASV_g_nnet_cv
+

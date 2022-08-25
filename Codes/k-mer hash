@@ -64,6 +64,7 @@ LiaoRl21_7_mer_hash = multmerge("D:/Research/CeDAR/LiaoRl21/LiaoRl21_7_mer_hash_
 write.csv(LiaoRl21_7_mer_hash,"LiaoRl21_7_mer_hash.csv",na="0")
 
 Step 4. Constructing classifiers
+##Construting machine learning-based classifiers##
 setwd("D:/Research/CeDAR/LiaoRl21/LiaoRl21_7_mer_hash")
 
 LiaoRl21_7_mer_hash<-read.csv("LiaoRl21_7_mer_hash.csv")

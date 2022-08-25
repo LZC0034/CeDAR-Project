@@ -63,3 +63,117 @@ Reduce(function(x,y) {merge(x,y,all=TRUE)}, datalist)
 LiaoRl21_7_mer_hash = multmerge("D:/Research/CeDAR/LiaoRl21/LiaoRl21_7_mer_hash_csv")
 write.csv(LiaoRl21_7_mer_hash,"LiaoRl21_7_mer_hash.csv",na="0")
 
+Step 4. Constructing classifiers
+setwd("D:/Research/CeDAR/LiaoRl21/LiaoRl21_7_mer_hash")
+
+LiaoRl21_7_mer_hash<-read.csv("LiaoRl21_7_mer_hash.csv")
+LiaoRl21_7_mer_hash<-LiaoRl21_7_mer[,-1]
+
+prefix<-"H"
+prefix
+suffix<-seq(1:8192)
+suffix
+Index<-paste(prefix,suffix,sep="")
+Index
+LiaoRl21_7_mer_hash2<-cbind(Index,LiaoRl21_7_mer[,2:109])
+LiaoRl21_7_mer_hash2<-as.data.frame(LiaoRl21_7_mer_hash2)
+write.csv(LiaoRl21_7_mer_hash2,"LiaoRl21_7_mer_hash2.csv")
+
+Liaorl21_7_mer_hash2_t<-t(LiaoRl21_7_mer_hash2)
+Liaorl21_7_mer_hash2_t<-as.data.frame(Liaorl21_7_mer_hash2_t)
+names(LiaoRl21_7_mer_hash2_t)<-LiaoRl21_7_mer_hash2_t[1,]
+LiaoRl21_7_mer_hash2_t<-LiaoRl21_7_mer_hash2_t[-1,]
+write.csv(LiaoRl21_7_mer_hash2_t,"LiaoRl21_7_mer_hash2_t.csv")
+LiaoRl21_7_mer_hash2_t<-read.csv("LiaoRl21_7_mer_hash2_t.csv")
+
+library(dplyr)
+LiaoRl21_safety_metadata<-read.csv("LiaoRl21_safety_metadata.csv")
+LiaoRl21_7_mer_hash_factors<- LiaoRl21_safety_metadata[,c(4,5,6,7,8)]
+LiaoRl21_7_mer_hash_tnew<-cbind(LiaoRl21_7_mer_hash_factors,LiaoRl21_7_mer_hash_t[,2:8193])
+LiaoRl21_7_mer_hash_tnew2<-cbind(LiaoRl21_safety_metadata[1],LiaoRl21_7_mer_hash_tnew)
+write.csv(LiaoRl21_7_mer_hash_tnew2,"LiaoRl21_7_mer_hash_tnew.csv",na="0")
+LiaoRl21_7_mer_hash_tnew<-read.csv("LiaoRl21_7_mer_hash_tnew.csv")
+LiaoRl21_7_mer_hash_tnew<-LiaoRl21_7_mer_hash_tnew[,-1]
+
+##Normalizing data using common sum scaling (CSS) method##
+sumrow<-rowSums(LiaoRl21_7_mer_hash_tnew[,7:8198])
+scaling_ratio <- min(sumrow)/sumrow
+LiaoRl21_7_mer_hash_matrix<-LiaoRl21_7_mer_hash_tnew[,7:8198]
+LiaoRl21_7_mer_hash_css<-scaling_ratio*LiaoRl21_7_mer_hash_matrix
+LiaoRl21_7_mer_hash_css_full<-cbind(LiaoRl21_7_mer_hash_tnew[,1:6],Liaorl21_7_mer_hash_css)
+write.csv(LiaoRl21_7_mer_hash_css_full,"LiaoRl21_7_mer_hash_css_full.csv")
+
+##Conducting confounding effect removal (cer) using ComBat function in ‘sva’ R package##
+LiaoRl21_7_mer_hash_css_full<-read.csv("LiaoRl21_7_mer_hash_css_full.csv")
+LiaoRl21_7_mer_hash_css_full<-LiaoRl21_7_mer_hash_css_full[,-1]
+library(sva) 
+Brand<-as.factor(LiaoRl21_7_mer_hash_css_full$Brand)
+Days<-as.factor(LiaoRl21_7_mer_hash_css_full$Days)
+Season<-as.factor(LiaoRl21_7_mer_hash_css_full$Season)
+Group<-as.factor(LiaoRl21_7_mer_hash_css_full$Group)
+
+LiaoRl21_7_mer_hash_css_t<-t(LiaoRl21_7_mer_hash_css_full[,7:8198])
+LiaoRl21_7_mer_hash_css_br = ComBat(dat=LiaoRl21_7_mer_hash_css_t, batch=Brand, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #br means brand effect removal#
+LiaoRl21_7_mer_hash_css_bdr = ComBat(dat=LiaoRl21_7_mer_hash_css_br, batch=Days, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdr means brand and day effect removal#
+LiaoRl21_7_mer_hash_css_bdsr = ComBat(dat=LiaoRl21_7_mer_hash_css_bdr, batch=Season, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdr means brand and day effect removal#
+LiaoRl21_7_mer_hash_css_bdsrt<-t(LiaoRl21_7_mer_hash_css_bdsr)
+LiaoRl21_7_mer_hash_css_bdsrt_full<-cbind(LiaoRl21_7_mer_hash_css_full[,1:6],LiaoRl21_7_mer_hash_css_bdsrt)
+write.csv(LiaoRl21_7_mer_hash_css_bdsrt_full,"LiaoRl21_7_mer_hash_css_bdsrt_full.csv")
+
+##Building random forests (RF)-based model with Out-of-bag (OOB) validation method##
+library(randomForest)
+LiaoRl1_7_mer_hash_css_bdsrt_full<-read.csv("LiaoRl21_7_mer_hash_css_bdsrt_full.csv")
+LiaoRl21_7_mer_hash_css_bdsrt_full<-LiaoRl21_7_mer_hash_css_bdsrt_full[,-1]
+Brand<-as.factor(LiaoRl21_7_mer_hash_css_bdsrt_full$Brand)
+Days<-as.factor(LiaoRl21_7_mer_hash_css_bdsrt_full$Days)
+Season<-as.factor(LiaoRl21_7_mer_hash_css_bdsrt_full$Season)
+Group<-as.factor(LiaoRl21_7_mer_hash_css_bdsrt_full$Group)
+Pathogen<-as.factor(LiaoRl21_7_mer_hash_css_bdsrt_full$Pathogen)
+LiaoRl21_7_mer_hash_g_rf <- randomForest(Group~.,data=LiaoRl21_7_mer_hash_css_bdsrt_full[,7:8198],importance=TRUE, proximity=TRUE) #OOB validation method is embodied in this R package##Five replicates were conducted#
+LiaoRl21_7_mer_hash_g_rf #g represents group#
+
+##Building RF-based model with 10-fold cross-validation method##
+library(caret)
+library(randomForest)
+Group<-as.factor(LiaoRl21_7_mer_hash_css_bdsrt_full$Group)
+trControl <- trainControl(method  = "cv",
+                          number = 10)
+x<- LiaoRl1_7_mer_hash_css_bdsrt_full[,7:8198]
+mtry <- sqrt(ncol(x))
+LiaoRl21_7_mer_hash_g_rf_cv <- train(Group ~ .,
+             method     = "rf",
+             tuneGrid   = expand.grid(.mtry=mtry),
+             trControl  = trControl,
+             metric     = "Accuracy",
+             MaxNWts=300000,
+             data       = LiaoRl1_7_mer_hash_css_bdsrt_full[,7:8198])
+LiaoRl21_7_mer_hash_g_rf_cv
+
+##Building k-nearest neighbors (k-NN)-based model with 10-fold cross-validation method##
+library(caret)
+library(e1071)
+trControl <- trainControl(method  = "cv",
+                          number  = 10)
+LiaoRl21_7_mer_hash_g_knn_cv <- train(Group ~ .,
+             method     = "knn",
+             tuneGrid   = expand.grid(k = 1:10),
+             trControl  = trControl,
+             metric     = "Accuracy",
+             data       = LiaoRl1_7_mer_hash_css_bdsrt_full[,7:8198])
+LiaoRl21_7_mer_hash_g_knn_cv
+
+##Building neural network (NN)-based model with 10-fold cross-validation method##
+library(caret)
+library(nnet)
+trControl <- trainControl(method  = "cv",
+                          number  = 10)
+LiaoRl21_7_mer_hash_g_nnet_cv <- train(Group ~ .,
+             method     = "nnet",
+             tuneGrid   = expand.grid(size=5,decay=0.1),
+             trControl  = trControl,
+             metric     = "Accuracy",
+             MaxNWts=300000,
+             data       = LiaoRl1_7_mer_hash_css_bdsrt_full[,7:8198])
+LiaoRl21_7_mer_hash_g_nnet_cv
+
+

@@ -62,8 +62,8 @@ Group<-as.factor(LiaoRl21_ASV_css_full$Group)
 
 LiaoRl21_ASV_css_t<-t(LiaoRl21_ASV_css_full[,7:2516])
 LiaoRl21_ASV_css_br = ComBat(dat=LiaoRl21_ASV_css_t, batch=Brand, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #br means brand effect removal#
-LiaoRl21_ASV_css_bdr = ComBat(dat=LiaoRl21_ASV_css_br, batch=Days, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdr means brand and day effect removal#
-LiaoRl21_ASV_css_bdsr = ComBat(dat=LiaoRl21_ASV_css_bdr, batch=Season, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdr means brand and day effect removal#
+LiaoRl21_ASV_css_bdr = ComBat(dat=LiaoRl21_ASV_css_br, batch=Days, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdr means brand and day effects removal#
+LiaoRl21_ASV_css_bdsr = ComBat(dat=LiaoRl21_ASV_css_bdr, batch=Season, mod=NULL, par.prior=FALSE, mean.only=TRUE)  #bdsr means brand, day, and season effects removal#
 LiaoRl21_ASV_css_bdsrt<-t(LiaoRl21_ASV_css_bdsr)
 LiaoRl21_ASV_css_bdsrt_full<-cbind(LiaoRl21_ASV_css_full[,1:6],LiaoRl21_ASV_css_bdsrt)
 write.csv(LiaoRl21_ASV_css_bdsrt_full,"LiaoRl21_ASV_css_bdsrt_full.csv")
